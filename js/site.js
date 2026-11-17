@@ -233,8 +233,12 @@
       var bestD = 2;
       lis.forEach(function (li, i) {
         var c = li.offsetLeft + li.offsetWidth / 2 - x;
-        var d = Math.min(1, Math.abs(c - vw / 2) / (vw * 0.5));
-        li.style.setProperty('--d', reduce ? '0' : d.toFixed(3));
+        /* Rund um die Mitte bleibt das Foto ganz scharf (ohne Filter und ohne Verkleinerung) */
+        var zone = Math.min(li.offsetWidth * 0.25, vw * 0.12);
+        var d = Math.min(1, Math.max(0, Math.abs(c - vw / 2) - zone) / (vw * 0.45));
+        if (reduce) { d = 0; }
+        li.style.setProperty('--d', d.toFixed(3));
+        li.classList.toggle('is-sharp', d === 0);
         if (d < bestD) { bestD = d; best = i; }
       });
       if (best !== current) {

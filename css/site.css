@@ -227,6 +227,17 @@ button { font: inherit; color: inherit; }
 .facts dt { font: 600 .7rem/1 var(--body); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
 .facts dd { line-height: 1.45; }
 
+/* Profile: unter den Fakten, als Reihe von Links */
+.profiles {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 14px clamp(24px, 4vw, 56px);
+  padding: 22px 0; border-bottom: 1px solid var(--line-2);
+}
+.profiles .h3 { margin: 0; font: 600 .7rem/1 var(--body); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+.profiles__list { display: flex; flex-wrap: wrap; gap: 10px clamp(18px, 2.6vw, 34px); }
+.profiles__list a { text-decoration: none; white-space: nowrap; transition: color .2s; }
+.profiles__list a::after { content: " ↗"; color: var(--muted); transition: color .2s; }
+.profiles__list a:hover, .profiles__list a:hover::after { color: var(--accent); }
+
 @media (max-width: 860px) {
   .about__grid { grid-template-columns: 1fr; }
   .facts { grid-template-columns: 1fr 1fr; }
@@ -301,6 +312,8 @@ button { font: inherit; color: inherit; }
 .js .strip[data-mode="fokus"] .strip__item img {
   filter: grayscale(calc(var(--d) * .9)) brightness(calc(1 - var(--d) * .5)) blur(calc(var(--d) * 2.6px));
 }
+.js .strip[data-mode="fokus"] li.is-sharp .strip__item { transform: none; }
+.js .strip[data-mode="fokus"] li.is-sharp .strip__item img { filter: none; }
 .js .strip[data-mode="fokus"] .strip__item::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: 3px;
   box-shadow: inset 0 0 0 1px rgba(214, 163, 92, calc((1 - var(--d) * 4) * .55));
@@ -329,12 +342,13 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Produktionen: Plakat oder Standbild, beim Darüberfahren läuft die Szene ---------- */
 
-.scenes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+.scenes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; gap: clamp(12px, 1.4vw, 20px); }
 .scene {
   position: relative; margin: 0; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 4px; background: #111113;
   isolation: isolate;
 }
 .scene--big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
+.scene--big.scene--right { grid-column: 2 / span 2; }   /* zweite grosse Kachel rechts, kleine Kacheln links daneben */
 .scene__bg, .scene__still, .scene__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .scene__bg { transform: scale(1.08); transition: opacity .5s ease; }
 .scene__still { transition: opacity .5s ease, transform 1.2s cubic-bezier(.2, .7, .2, 1); }
@@ -411,7 +425,7 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 980px) {
   .scenes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .scene--big { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 16 / 9; }
+  .scene--big, .scene--big.scene--right { grid-column: 1 / -1; grid-row: auto; aspect-ratio: 16 / 9; }
   /* ungerade Anzahl kleiner Kacheln: die letzte über die ganze Breite */
   .scenes > .scene:last-child:nth-child(odd):not(.scene--next) { grid-column: 1 / -1; }
 }
@@ -440,7 +454,7 @@ button { font: inherit; color: inherit; }
 /* ---------- Kontakt ---------- */
 
 .contact { background: var(--bg-2); border-top: 1px solid var(--line-2); }
-.contact__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
+.contact__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 2fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
 .contact__col { padding-top: clamp(0px, 1vw, 14px); }
 .contact__area { color: var(--muted); font-size: .9rem; margin: -8px 0 16px; }
 address { font-style: normal; line-height: 1.8; }

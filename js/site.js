@@ -101,6 +101,19 @@
   /* ---------- Showreel: «Showreel ansehen» holt den Player in die Bildmitte und startet ihn ---------- */
   var reel = doc.getElementById('reel-video');
   if (reel) {
+    /* Grosser Playbutton in der Mitte; die Leiste des Browsers kommt erst mit dem Abspielen dazu */
+    var reelPlay = reel.parentNode.querySelector('.reel__play');
+    if (reelPlay) {
+      reel.removeAttribute('controls');
+      reelPlay.hidden = false;
+      var startReel = function () { reel.preload = 'auto'; tryPlay(reel); };
+      reelPlay.addEventListener('click', startReel);
+      reel.addEventListener('click', function () { if (!reel.hasAttribute('controls')) { startReel(); } });
+      reel.addEventListener('play', function () {
+        reel.parentNode.classList.add('is-started');
+        reel.setAttribute('controls', '');
+      });
+    }
     all('.hero .btn[href="#showreel"]').forEach(function (btn) {
       btn.addEventListener('click', function (ev) {
         ev.preventDefault();
@@ -199,8 +212,10 @@
   }
 
   /* ---------- Fotos, Variante «fokus»: Schärfeverlagerung ----------
-     Grosse Bildschirme: Der Abschnitt bleibt stehen, das Scrollen schiebt die Fotos seitwärts.
-     Handy: wischen. In beiden Fällen ist das Foto in der Mitte scharf und farbig. */
+     Der Abschnitt bleibt stehen, und das Scrollen schiebt die Fotos seitwärts, auch auf dem Handy:
+     So sieht man alle Fotos, ohne wissen zu müssen, dass man wischen kann (Simon, 18.11.2026).
+     Wischen springt zusätzlich zum nächsten Foto. Ohne Bewegung (Systemeinstellung) oder auf sehr
+     niedrigen Bildschirmen: normaler Streifen zum Wischen. Das Foto in der Mitte ist scharf und farbig. */
   function fokus(strip) {
     var section = strip.closest('section');
     var track = strip.querySelector('.strip__track');
@@ -208,21 +223,36 @@
     var items = all('.strip__item', track);
     var countEl = section.querySelector('.photos__count');
     var creditEl = section.querySelector('.photos__credit');
-    var pinQuery = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
-    var SPEED = 1.6;           /* seitliche Pixel pro gescrolltem Pixel */
+    var pin = section.querySelector('.photos__pin');
+    var pinQuery = window.matchMedia('(min-height: 520px)');
+    /* seitliche Pixel pro gescrolltem Pixel; auf dem Handy etwas ruhiger */
+    var speed = function () { return window.innerWidth < 700 ? 1.2 : 1.6; };
     var pinned = false;
     var distance = 0;
     var current = -1;
     var ticking = false;
     var pad2 = function (n) { return (n < 10 ? '0' : '') + n; };
     section.classList.add('has-now');
+    /* Punkte unter dem Streifen (auf dem Handy sichtbar): zeigen, wie viele Fotos es gibt */
+    var dotsEl = doc.createElement('div');
+    dotsEl.className = 'strip__dots';
+    var dots = items.map(function (item, i) {
+      var dot = doc.createElement('button');
+      dot.type = 'button';
+      dot.tabIndex = -1;
+      dot.setAttribute('aria-hidden', 'true');
+      dot.addEventListener('click', function () { goTo(i); });
+      dotsEl.appendChild(dot);
+      return dot;
+    });
+    strip.appendChild(dotsEl);
 
     var update = function () {
       ticking = false;
       var vw = track.clientWidth;
       var x;
       if (pinned) {
-        var total = section.offsetHeight - window.innerHeight;
+        var total = section.offsetHeight - pin.offsetHeight;
         var p = total > 0 ? Math.min(1, Math.max(0, -section.getBoundingClientRect().top / total)) : 0;
         x = p * distance;
         track.style.transform = 'translate3d(' + (-x).toFixed(1) + 'px,0,0)';
@@ -235,7 +265,8 @@
         var c = li.offsetLeft + li.offsetWidth / 2 - x;
         /* Rund um die Mitte bleibt das Foto ganz scharf (ohne Filter und ohne Verkleinerung) */
         var zone = Math.min(li.offsetWidth * 0.25, vw * 0.12);
-        var d = Math.min(1, Math.max(0, Math.abs(c - vw / 2) - zone) / (vw * 0.45));
+        /* Auf schmalen Bildschirmen bleiben die Nachbarfotos heller, damit man sieht, dass es weitergeht */
+        var d = Math.min(1, Math.max(0, Math.abs(c - vw / 2) - zone) / (vw * (vw < 700 ? 1.1 : 0.45)));
         if (reduce) { d = 0; }
         li.style.setProperty('--d', d.toFixed(3));
         li.classList.toggle('is-sharp', d === 0);
@@ -244,6 +275,7 @@
       if (best !== current) {
         current = best;
         countEl.textContent = pad2(best + 1) + ' / ' + pad2(items.length);
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-on', i === best); });
         var name = items[best].getAttribute('data-credit');
         creditEl.textContent = name ? '© ' + name : '';
       }
@@ -264,7 +296,7 @@
       if (pinned) {
         all('img', track).forEach(function (img) { img.removeAttribute('loading'); });
         distance = (last.offsetLeft + last.offsetWidth / 2) - (first.offsetLeft + first.offsetWidth / 2);
-        section.style.height = Math.round(window.innerHeight + distance / SPEED) + 'px';
+        section.style.height = Math.round(pin.offsetHeight + distance / speed()) + 'px';
       } else {
         distance = 0;
         section.style.height = '';
@@ -276,7 +308,7 @@
       var li = lis[i];
       var target = li.offsetLeft + li.offsetWidth / 2 - track.clientWidth / 2;
       if (pinned) {
-        var total = section.offsetHeight - window.innerHeight;
+        var total = section.offsetHeight - pin.offsetHeight;
         var p = distance > 0 ? Math.min(1, Math.max(0, target / distance)) : 0;
         window.scrollTo({ top: section.offsetTop + p * total, behavior: reduce ? 'auto' : 'smooth' });
       } else {
@@ -287,11 +319,29 @@
     window.addEventListener('scroll', function () { if (pinned) { request(); } }, { passive: true });
     track.addEventListener('scroll', function () { if (!pinned) { request(); } }, { passive: true });
     var resizeTimer = null;
+    var lastW = window.innerWidth;
+    var lastH = window.innerHeight;
     window.addEventListener('resize', function () {
+      /* Auf dem Handy blendet die Browserleiste beim Scrollen ein und aus; das allein misst nicht neu */
+      if (window.innerWidth === lastW && Math.abs(window.innerHeight - lastH) < 160) { return; }
+      lastW = window.innerWidth;
+      lastH = window.innerHeight;
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(measure, 120);
     });
     if (pinQuery.addEventListener) { pinQuery.addEventListener('change', measure); }
+    /* Wischen im fixierten Streifen: zum nächsten oder vorherigen Foto (die Seite scrollt dazu mit) */
+    var touch = null;
+    strip.addEventListener('touchstart', function (ev) {
+      touch = (pinned && ev.touches.length === 1) ? { x: ev.touches[0].clientX, y: ev.touches[0].clientY } : null;
+    }, { passive: true });
+    strip.addEventListener('touchend', function (ev) {
+      if (!touch) { return; }
+      var dx = ev.changedTouches[0].clientX - touch.x;
+      var dy = ev.changedTouches[0].clientY - touch.y;
+      touch = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) { goTo(current + (dx < 0 ? 1 : -1)); }
+    }, { passive: true });
     strip.querySelector('.strip__prev').addEventListener('click', function () { goTo(current - 1); });
     strip.querySelector('.strip__next').addEventListener('click', function () { goTo(current + 1); });
     items.forEach(function (item, i) {

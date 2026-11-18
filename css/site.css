@@ -172,8 +172,8 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Abschnitte ---------- */
 
-.section { padding: clamp(72px, 11vw, 150px) 0; }
-.about { padding-bottom: clamp(40px, 5vw, 72px); }   /* Profile → Fotos nicht zu weit auseinander */
+/* Oben mehr Luft als unten: zwischen zwei Abschnitten soll überall etwa gleich viel Abstand stehen. */
+.section { padding: clamp(64px, 9vw, 128px) 0 clamp(32px, 4vw, 56px); }
 
 .h2 {
   font-family: var(--display); font-stretch: 75%; font-weight: 700; text-transform: uppercase;
@@ -267,6 +267,22 @@ button { font: inherit; color: inherit; }
   background: #000; border-radius: 4px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, .5);
 }
 .reel__player video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+.reel__player { position: relative; }
+/* Grosser Playbutton in der Bildmitte; die Leiste des Browsers erscheint erst beim Abspielen. */
+.reel__play {
+  position: absolute; inset: 0; margin: auto; width: clamp(72px, 9vw, 104px); height: clamp(72px, 9vw, 104px);
+  border-radius: 50%; border: 1px solid rgba(236, 235, 232, .7); background: rgba(11, 11, 12, .45);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); display: grid; place-items: center; cursor: pointer;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .45); transition: transform .3s cubic-bezier(.2, .7, .2, 1), background .25s, border-color .25s;
+}
+.reel__play:hover, .reel__play:focus-visible { transform: scale(1.08); background: var(--accent); border-color: var(--accent); }
+.reel__play-icon {
+  width: 0; height: 0; margin-left: 12%; border-style: solid; border-width: 15px 0 15px 25px;
+  border-color: transparent transparent transparent var(--text); transition: border-color .25s;
+}
+.reel__play:hover .reel__play-icon, .reel__play:focus-visible .reel__play-icon { border-left-color: var(--accent-ink); }
+.reel__play[hidden], .reel__player.is-started .reel__play { display: none; }
+.reel__player:not(.is-started) video { cursor: pointer; }
 
 /* ---------- Fotos ---------- */
 /* Zwei Varianten (inhalt.json, fotos_modus):
@@ -336,7 +352,7 @@ button { font: inherit; color: inherit; }
 /* Auf grossen Bildschirmen bleibt der Abschnitt stehen, und das Scrollen schiebt die Fotos seitwärts. */
 .photos.is-pinned { padding: 0; overflow: visible; }   /* overflow: hidden würde «sticky» verhindern */
 .photos.is-pinned .photos__pin {
-  position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; justify-content: flex-start;
+  position: sticky; top: 0; height: 100vh; height: 100svh; display: flex; flex-direction: column; justify-content: flex-start;
   padding-top: calc(var(--top-h) + clamp(16px, 4vh, 48px)); overflow: hidden;
 }
 .photos.is-pinned .strip {
@@ -344,6 +360,8 @@ button { font: inherit; color: inherit; }
   mask-image: linear-gradient(90deg, transparent 0, #000 7%, #000 93%, transparent 100%);
 }
 .photos.is-pinned .photos__pin > .wrap { width: 100%; }
+/* Unter dem fixierten Fotostreifen bleibt schon Luft, darum beginnt das Showreel näher. */
+.photos.is-pinned + .section { padding-top: clamp(24px, 3vw, 40px); }
 .photos.is-pinned .strip__track { overflow: visible; scroll-snap-type: none; will-change: transform; }
 .photos.is-pinned .strip__item { height: min(56vh, 600px); }
 .photos.is-pinned .h2 { margin-bottom: clamp(20px, 3vh, 40px); }
@@ -353,7 +371,21 @@ button { font: inherit; color: inherit; }
 @media (max-width: 640px) {
   .strip__item { height: min(64vh, 470px); }
   .strip__track { padding: 0 20px; -webkit-mask-image: none; mask-image: none; }
+  /* Handy, fixiert: Fotos etwas kleiner, damit links und rechts die nächsten Fotos hereinschauen */
+  .photos.is-pinned .strip__item { height: min(56vh, 104vw, 480px); height: min(56svh, 104vw, 480px); }
+  .photos.is-pinned .strip { -webkit-mask-image: none; mask-image: none; }
+  .strip .strip__dots { display: flex; }
 }
+/* Punkte unter dem Streifen: nur auf dem Handy */
+.strip__dots { display: none; justify-content: center; gap: 4px; margin-top: 18px; }
+.strip__dots button {
+  width: 22px; height: 22px; padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
+}
+.strip__dots button::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; background: rgba(236, 235, 232, .28);
+  transition: width .3s, background .3s;
+}
+.strip__dots button.is-on::before { width: 20px; border-radius: 3px; background: var(--accent); }
 
 /* ---------- Produktionen: Plakat oder Standbild, beim Darüberfahren läuft die Szene ---------- */
 
@@ -468,7 +500,7 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Kontakt ---------- */
 
-.contact { background: var(--bg-2); border-top: 1px solid var(--line-2); }
+.contact { padding-bottom: clamp(56px, 7vw, 96px); background: var(--bg-2); border-top: 1px solid var(--line-2); }
 .contact__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 2fr); gap: clamp(28px, 5vw, 72px); align-items: start; }
 .contact__col { padding-top: clamp(0px, 1vw, 14px); }
 .contact__area { color: var(--muted); font-size: .9rem; margin: -8px 0 16px; }

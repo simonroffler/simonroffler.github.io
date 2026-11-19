@@ -212,6 +212,8 @@ button { font: inherit; color: inherit; }
 }
 .cv__list li:last-child { border-bottom: 1px solid var(--line-2); }
 .cv__year { color: var(--muted); font-variant-numeric: tabular-nums; }
+/* Rolle unter dem Titel, ruhiger als der Titel */
+.cv__role { display: block; margin-top: 3px; font-size: .86em; color: var(--muted); }
 .cv__more { display: inline-block; margin-top: 26px; }
 
 .textlink {

@@ -98,6 +98,23 @@
     }
   }
 
+  /* ---------- CV neben der Bio: bleibt beim Lesen stehen. Ist er höher als der Bildschirm (mit Rollen),
+     scrollt er zuerst mit und bleibt erst stehen, wenn sein Ende sichtbar ist. ---------- */
+  var cvBox = doc.querySelector('.about__cv');
+  if (cvBox) {
+    var cvTop = function () {
+      cvBox.style.top = '';
+      if (getComputedStyle(cvBox).position !== 'sticky') { return; }
+      var oben = parseFloat(getComputedStyle(cvBox).top) || 0;
+      if (cvBox.offsetHeight > window.innerHeight - oben - 24) {
+        cvBox.style.top = (window.innerHeight - cvBox.offsetHeight - 24) + 'px';
+      }
+    };
+    cvTop();
+    window.addEventListener('resize', cvTop);
+    window.addEventListener('load', cvTop);
+  }
+
   /* ---------- Showreel: «Showreel ansehen» holt den Player in die Bildmitte und startet ihn ---------- */
   var reel = doc.getElementById('reel-video');
   if (reel) {

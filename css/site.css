@@ -398,6 +398,7 @@ button { font: inherit; color: inherit; }
 }
 .scene--big { grid-column: span 2; grid-row: span 2; aspect-ratio: auto; }
 .scene--big.scene--right { grid-column: 2 / span 2; }   /* zweite grosse Kachel rechts, kleine Kacheln links daneben */
+@media (min-width: 981px) { .scene--wide { grid-column: span 2; aspect-ratio: auto; } }   /* letzte Reihe ohne Lücke */
 .scene__bg, .scene__still, .scene__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .scene__bg { transform: scale(1.08); transition: opacity .5s ease; }
 .scene__still { transition: opacity .5s ease, transform 1.2s cubic-bezier(.2, .7, .2, 1); }
